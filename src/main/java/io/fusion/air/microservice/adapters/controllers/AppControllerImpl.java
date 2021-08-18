@@ -19,6 +19,7 @@ import io.fusion.air.microservice.ServiceBootStrap;
 import io.fusion.air.microservice.domain.models.*;
 import io.fusion.air.microservice.server.config.ServiceConfiguration;
 import io.fusion.air.microservice.server.config.ServiceHelp;
+import io.fusion.air.microservice.server.controller.AbstractController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -33,6 +34,8 @@ import org.springframework.web.context.annotation.RequestScope;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static java.lang.invoke.MethodHandles.lookup;
@@ -47,10 +50,11 @@ import static org.slf4j.LoggerFactory.getLogger;
  */
 @Configuration
 @RestController
-@RequestMapping("/api/v1/order")
+// "/api/v1/order"
+@RequestMapping("${service.api.path}")
 @RequestScope
 @Tag(name = "Order", description = "Order Service ")
-public class AppControllerImpl {
+public class AppControllerImpl extends AbstractController {
 
 	// Set Logger -> Lookup will automatically determine the class name.
 	private static final Logger log = getLogger(lookup().lookupClass());
@@ -61,24 +65,7 @@ public class AppControllerImpl {
 	private String serviceName;
 
 	/**
-	 * Returns the Service Name
-	 * @return
-	 */
-	private String name() {
-		if(serviceName == null) {
-			if(serviceConfig == null) {
-				log.info(LocalDateTime.now() + "|" + name() + "|Error Autowiring Service config!!!");
-				serviceName = "NoServiceName";
-			} else {
-				serviceName = serviceConfig.getServiceName() + "Service";
-				log.info("|"+name()+"|Version="+ServiceHelp.VERSION);
-			}
-		}
-		return serviceName;
-	}
-
-	/**
-	 * Get Method Call to Check the Health of the App
+	 * Get the Order Status
 	 * 
 	 * @return
 	 */
@@ -93,10 +80,15 @@ public class AppControllerImpl {
     })
 	@GetMapping("/status/{orderId}")
 	@ResponseBody
-	public ResponseEntity<String> getStatus(@PathVariable("referenceNo") String _orderId,
+	public ResponseEntity<Map<String,Object>> getStatus(@PathVariable("orderId") String _orderId,
 			HttpServletRequest request) throws Exception {
 		log.info("|"+name()+"|Request to Order Status of Service... ");
-		return ResponseEntity.ok("200:Service-Health-OK");
+		HashMap<String,Object> status = new HashMap<String,Object>();
+		status.put("Code", 200);
+		status.put("Status", true);
+		status.put("OrderID", _orderId);
+		status.put("Message","Order is waiting for dispatch.");
+		return ResponseEntity.ok(status);
 	}
 
 	/**
@@ -111,10 +103,16 @@ public class AppControllerImpl {
             description = "Unable to process the Order",
             content = @Content)
     })
-    @PostMapping("/processOrder")
-    public ResponseEntity<String> processPayments(@RequestBody OrderEntity _orderEntity) {
+    @PostMapping("/process")
+    public ResponseEntity<Map<String,Object>> processPayments(@RequestBody OrderEntity _orderEntity) {
 		log.info("|"+name()+"|Request to process payments... ");
-		return ResponseEntity.ok(OrderStatus.PAID.toString());
+		HashMap<String,Object> status = new HashMap<String,Object>();
+		status.put("Code", 200);
+		status.put("Status", true);
+		status.put("OrderID", _orderEntity.getOrderId());
+		status.put("OrderStatus", OrderStatus.PAID.toString());
+		status.put("Message","Order Status = "+OrderStatus.PAID.toString());
+		return ResponseEntity.ok(status);
     }
 
 	/**
@@ -130,45 +128,37 @@ public class AppControllerImpl {
 					content = @Content)
 	})
 	@DeleteMapping("/cancel/{orderId}")
-	public ResponseEntity<String> cancel(@PathVariable("referenceNo") String _orderId) {
+	public ResponseEntity<Map<String,Object>> cancel(@PathVariable("orderId") String _orderId) {
 		log.info("|"+name()+"|Request to process payments... ");
-		return ResponseEntity.ok("200:Cancellation-OK");
+		HashMap<String,Object> status = new HashMap<String,Object>();
+		status.put("Code", 200);
+		status.put("Status", true);
+		status.put("OrderID", _orderId);
+		status.put("Message","Order Cancelled!");
+		return ResponseEntity.ok(status);
 	}
 
 	/**
-	 * Cancel the Order
+	 * Update the Order
 	 */
 	@Operation(summary = "Update Order")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200",
-					description = "Update the payment",
+					description = "Update the Order",
 					content = {@Content(mediaType = "application/json")}),
 			@ApiResponse(responseCode = "404",
 					description = "Unable to Update the payment",
 					content = @Content)
 	})
-	@PutMapping("/update/{referenceNo}")
-	public ResponseEntity<String> updateOrder(@PathVariable("referenceNo") String _referenceNo) {
-		log.info("|"+name()+"|Request to Update payments... ");
-		return ResponseEntity.ok("200:Update-OK");
-	}
-
-	/**
-	 * Print the Request
-	 * 
-	 * @param request
-	 * @return
-	 */
-	private String printRequestURI(HttpServletRequest request) {
-		StringBuilder sb = new StringBuilder();
-		String[] req = request.getRequestURI().split("/");
-		sb.append("Params Size = "+req.length+" : ");
-		for(int x=0; x < req.length; x++) {
-			sb.append(req[x]).append("|");
-		}
- 		sb.append("\n");
-		log.info(sb.toString());
-		return sb.toString();
+	@PutMapping("/update/{orderId}")
+	public ResponseEntity<Map<String,Object>> updateOrder(@PathVariable("orderId") String _orderId) {
+		log.info("|"+name()+"|Request to Update payments... "+_orderId);
+		HashMap<String,Object> status = new HashMap<String,Object>();
+		status.put("Code", 200);
+		status.put("Status", true);
+		status.put("OrderID", _orderId);
+		status.put("Message","Order updated!");
+		return ResponseEntity.ok(status);
 	}
  }
 
