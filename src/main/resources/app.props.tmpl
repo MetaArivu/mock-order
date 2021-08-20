@@ -1,11 +1,13 @@
 # =======================================================================
 # Service Name & API Details -  Version, Path
 # =======================================================================
+service.org=metamagic
 service.name=Order
 service.api.prefix=api
 service.api.version=v1
 service.api.name=order
-service.api.repository=https://github.com/MetaArivu/mock-${service.api.name}
+service.container=mock-order
+service.api.repository=https://github.com/MetaArivu/${service.container}
 service.api.path=/${service.api.prefix}/${service.api.version}/${service.api.name}
 service.url=http://www.metarivu.com/
 # =======================================================================
